@@ -71,5 +71,4 @@ with col_social:
 with col_contact:
     st.markdown("**📬 Связь:**")
     st.write("Есть идея или нашли ошибку?")
-
     st.markdown("[Написать мне (@nazmiika)](https://t.me/nazmiika)")
