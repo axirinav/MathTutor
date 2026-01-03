@@ -2,12 +2,13 @@ import streamlit as st
 import random
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
 st.set_page_config(page_title="Тригонометрия", page_icon="📐")
 
 st.title("📐 Практика: Вычисли функции")
 st.write("Даны стороны треугольника. Найди значение указанной функции.")
 
-# --- 1. ЛОГИКА ---
+# --- 1. ЛОГИКА И ФУНКЦИИ (Callbacks) ---
 
 def generate_pythagorean_triple():
     m = random.randint(2, 7)
@@ -24,37 +25,93 @@ def generate_pythagorean_triple():
 
 funcs = ["sin", "cos", "tg", "ctg"]
 
-# Инициализация переменных при первом запуске
-if 'side_a' not in st.session_state:
-    a, b, c = generate_pythagorean_triple()
-    st.session_state.side_a = a
-    st.session_state.side_b = b
-    st.session_state.side_c = c
-    st.session_state.target_func = random.choice(funcs)
-    # Инициализируем значения полей ввода (если их нет)
-    if 'num' not in st.session_state: st.session_state.num = 0
-    if 'den' not in st.session_state: st.session_state.den = 1
-
-# Функция для кнопки "Следующая задача"
+# Функция запуска новой игры
 def new_task():
-    # 1. Генерируем новые числа
+    # 1. Генерируем новые данные
     a, b, c = generate_pythagorean_triple()
     st.session_state.side_a = a
     st.session_state.side_b = b
     st.session_state.side_c = c
     st.session_state.target_func = random.choice(funcs)
     
-    # 2. ОЧИЩАЕМ ПОЛЯ ВВОДА (сбрасываем значения ключей)
-    st.session_state.num = 0
-    st.session_state.den = 1
+    # 2. ОЧИЩАЕМ ПОЛЯ ВВОДА (Делаем их ПУСТЫМИ через None)
+    st.session_state.num = None
+    st.session_state.den = None
+    
+    # 3. Сбрасываем статус проверки
+    st.session_state.checked = False
+    st.session_state.result_msg = ""
 
-# Достаем текущие значения
+# Функция проверки ответа
+def check_answer():
+    user_num = st.session_state.num
+    user_den = st.session_state.den
+    
+    a = st.session_state.side_a
+    b = st.session_state.side_b
+    c = st.session_state.side_c
+    func = st.session_state.target_func
+    
+    # Определяем правильный ответ
+    if func == "sin":
+        correct_num, correct_den = a, c
+    elif func == "cos":
+        correct_num, correct_den = b, c
+    elif func == "tg":
+        correct_num, correct_den = a, b
+    elif func == "ctg":
+        correct_num, correct_den = b, a
+        
+    st.session_state.checked = True
+    
+    # Логика проверки (с защитой от пустых полей)
+    if user_num is None or user_den is None:
+        st.session_state.result_msg = "empty_error"
+    elif user_den == 0:
+        st.session_state.result_msg = "zero_error"
+    elif user_num * correct_den == user_den * correct_num:
+        st.session_state.result_msg = "success"
+        st.session_state.correct_str = f"{correct_num}/{correct_den}"
+    else:
+        st.session_state.result_msg = "fail"
+        st.session_state.correct_str = f"{correct_num}/{correct_den}"
+
+# --- 2. ИНИЦИАЛИЗАЦИЯ ---
+if 'side_a' not in st.session_state:
+    # При первом запуске инициализируем None
+    if 'num' not in st.session_state: st.session_state.num = None
+    if 'den' not in st.session_state: st.session_state.den = None
+    # Генерируем задачу, но НЕ сбрасываем num/den еще раз (чтобы не затереть, если вдруг что)
+    # Лучше просто вызвать генерацию данных вручную здесь, без new_task
+    a, b, c = generate_pythagorean_triple()
+    st.session_state.side_a = a
+    st.session_state.side_b = b
+    st.session_state.side_c = c
+    st.session_state.target_func = random.choice(funcs)
+    st.session_state.checked = False
+    st.session_state.result_msg = ""
+
+# Переменные для отрисовки
 a = st.session_state.side_a
 b = st.session_state.side_b
 c = st.session_state.side_c
 func = st.session_state.target_func
 
-# --- 2. ВИЗУАЛИЗАЦИЯ ---
+# --- 3. САЙДБАР ---
+with st.sidebar:
+   
+    
+    st.markdown("### Определения:")
+    st.markdown(r"**Синус (sin)**")
+    st.latex(r"\frac{\text{Противолежащий}}{\text{Гипотенуза}}")
+    st.markdown(r"**Косинус (cos)**")
+    st.latex(r"\frac{\text{Прилежащий}}{\text{Гипотенуза}}")
+    st.markdown(r"**Тангенс (tg)**")
+    st.latex(r"\frac{\text{Противолежащий}}{\text{Прилежащий}}")
+    st.markdown(r"**Котангенс (ctg)**")
+    st.latex(r"\frac{\text{Прилежащий}}{\text{Противолежащий}}")
+
+# --- 4. ВИЗУАЛИЗАЦИЯ ---
 fig, ax = plt.subplots(figsize=(5, 4))
 
 triangle = patches.Polygon([[0, 0], [b, 0], [b, a]], closed=True, fill=None, edgecolor='black', linewidth=2)
@@ -73,56 +130,44 @@ ax.set_ylim(-a*0.1, a * 1.2)
 ax.axis('off')
 st.pyplot(fig)
 
-# --- 3. ИНТЕРФЕЙС ---
+# --- 5. ИНТЕРФЕЙС ВВОДА ---
 st.subheader(rf"Найдите: $\mathbf{{\{func}}}(\alpha)$")
 
-# Разметка колонок: Ввод (2) / Черта (0.5) / Ввод (2) / КНОПКИ (4)
-# Сделали последнюю колонку пошире, чтобы влезло две кнопки
 col1, col_slash, col2, col_btns = st.columns([2, 0.5, 2, 4])
 
 with col1:
-    # Важно: добавили key="num", чтобы управлять этим полем из кода
-    user_num = st.number_input("Числитель", step=1, key="num")
+    # value=None делает поле пустым (если в session_state тоже None)
+    st.number_input("Числитель", step=1, key="num", on_change=check_answer, value=None)
 
 with col_slash:
     st.markdown("## /") 
 
 with col2:
-    # Важно: добавили key="den"
-    user_den = st.number_input("Знаменатель", step=1, key="den")
+    st.number_input("Знаменатель", step=1, key="den", on_change=check_answer, value=None)
 
-# Логика правильного ответа
-if func == "sin":
-    correct_num, correct_den = a, c
-elif func == "cos":
-    correct_num, correct_den = b, c
-elif func == "tg":
-    correct_num, correct_den = a, b
-elif func == "ctg":
-    correct_num, correct_den = b, a
-
-# --- БЛОК КНОПОК ---
+# Кнопки
 with col_btns:
-    st.write("") # Отступы, чтобы кнопки встали ровно напротив полей ввода
-    st.write("")
+    st.write("") 
+    st.write("") 
     
-    # Разбиваем колонку кнопок еще на две части
     btn_check, btn_next = st.columns(2)
     
     with btn_check:
-        check_clicked = st.button("✅ Проверить")
+        st.button("✅ Проверить", on_click=check_answer)
         
     with btn_next:
-        # Кнопка вызывает функцию new_task, которая очищает поля
         st.button("➡️ Дальше", on_click=new_task)
 
-# Логика проверки (срабатывает только при нажатии Проверить)
-if check_clicked:
-    if user_den == 0:
+# --- 6. РЕЗУЛЬТАТ ---
+if st.session_state.get('checked'):
+    msg = st.session_state.result_msg
+    
+    if msg == "success":
+        st.success(f"Верно! {st.session_state.correct_str}")
+        st.balloons()
+    elif msg == "fail":
+        st.error(f"Ошибка. Правильный ответ: {st.session_state.correct_str}")
+    elif msg == "zero_error":
         st.error("На ноль делить нельзя!")
-    else:
-        if user_num * correct_den == user_den * correct_num:
-            st.success(f"Верно! {correct_num}/{correct_den}")
-            st.balloons()
-        else:
-            st.error(f"Ошибка. Ответ: {correct_num} / {correct_den}")
+    elif msg == "empty_error":
+        st.warning("Пожалуйста, введите оба числа.")
