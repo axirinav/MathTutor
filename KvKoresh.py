@@ -35,28 +35,32 @@ tools = [
     }
 ]
 
-# --- Визуализация: Рисуем таблицу ---
+# --- Функция для тонкой линии (CSS хак внутри Python) ---
+def thin_divider():
+    # margin: 5px 0 -> 5 пикселей отступа сверху/снизу (вместо стандартных 20+)
+    st.markdown("<hr style='margin: 5px 0; border-top: 1px solid #ddd; opacity: 0.2;'>", unsafe_allow_html=True)
 
-# Заголовки таблицы
-# [1, 2] означает, что вторая колонка в 2 раза шире первой
-header1, header2 = st.columns([1, 2]) 
-header1.markdown("**Название**")
-header2.markdown("**Описание**")
+# --- Визуализация: Таблица ---
 
-st.divider() # Линия-разделитель (как граница в таблице)
+# Заголовки
+col_h1, col_h2 = st.columns([1, 2]) 
+col_h1.markdown("**Название**")
+col_h2.markdown("**Описание**")
 
-# Выводим строки циклом
+thin_divider() # Используем нашу компактную линию
+
+# Строки
 for tool in tools:
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        # Это ссылка, которая выглядит как часть таблицы
         st.page_link(tool["page"], label=tool["name"], use_container_width=True)
         
     with col2:
-        st.write(tool["desc"])
+        # st.write добавляет свои отступы, заменим на markdown для плотности
+        st.markdown(tool["desc"])
         
-    st.divider() # Линия между строками
+    thin_divider() # Линия между строками
 
 # 3. ПОДВАЛ (Контакты и ссылки)
 # st.divider()
