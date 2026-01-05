@@ -1,13 +1,5 @@
 import streamlit as st
 
-# Настройка страницы (Заголовок в браузере и иконка)
-st.set_page_config(
-    page_title="MathTutor",
-    page_icon="🎓",
-    layout="centered"
-)
-
-# 1. ЗАГОЛОВОК И ПРИВЕТСТВИЕ
 st.title("🎓 MathTutor")
 st.markdown("### Тренажер, который не ставит двойки")
 
@@ -16,63 +8,56 @@ st.write("""
 Давно хотела сделать свои примеры. А еще хотелось повайбкодить. Пока я экспериментирую, вы можете попробовать тренажеры.
 """)
 
-st.divider()  # Горизонтальная линия
+st.divider()
 
-# 2. СПИСОК ТРЕНАЖЕРОВ (Табличный вид)
 st.subheader("🛠 Что будем тренировать?")
 
-# --- Логика: Данные храним отдельно ---
 tools = [
-    {
-        "page": "pages/KvEquations.py", # Проверьте имя файла!
+        {
+        "page": "pages/kv_equations.py",
         "name": "🧮 Уравнения",
         "desc": "Генератор квадратных уравнений. Тренируй счет и теорему Виета."
     },
     {
-        "page": "pages/Trigonometry (relations).py",      # Проверьте имя файла!
+        "page": "pages/trig_relations.py",
         "name": "📐 Тригонометрия",
         "desc": "Визуальный тренажер. Пойми связь между сторонами и углами."
+    },
+    {
+        "page": "pages/areas.py",
+        "name": "▭ Площади треугольников",
+        "desc": "Формулы площади треугольников (ф. Герона, через угол и через высоту)."
     }
 ]
 
-# --- Функция для тонкой линии (CSS хак внутри Python) ---
 def thin_divider():
-    # margin: 5px 0 -> 5 пикселей отступа сверху/снизу (вместо стандартных 20+)
-    st.markdown("<hr style='margin: 5px 0; border-top: 1px solid #ddd; opacity: 0.2;'>", unsafe_allow_html=True)
+    st.markdown(
+        "<hr style='margin: 5px 0; border-top: 1px solid #ddd; opacity: 0.2;'>",
+        unsafe_allow_html=True
+    )
 
-# --- Визуализация: Таблица ---
-
-# Заголовки
-col_h1, col_h2 = st.columns([1, 2]) 
+col_h1, col_h2 = st.columns([1, 2])
 col_h1.markdown("**Название**")
 col_h2.markdown("**Описание**")
 
-thin_divider() # Используем нашу компактную линию
+thin_divider()
 
-# Строки
 for tool in tools:
     col1, col2 = st.columns([1, 2])
-    
     with col1:
         st.page_link(tool["page"], label=tool["name"], use_container_width=True)
-        
     with col2:
-        # st.write добавляет свои отступы, заменим на markdown для плотности
         st.markdown(tool["desc"])
-        
-    thin_divider() # Линия между строками
-
-# 3. ПОДВАЛ (Контакты и ссылки)
-# st.divider()
+    thin_divider()
 
 col_social, col_contact = st.columns(2)
 
 with col_social:
     st.markdown("**🔗 Полезное:**")
-    # Красивая ссылка-кнопка
     st.link_button("Квадратный кореш (Telegram)", "https://t.me/kvkoresh")
 
 with col_contact:
     st.markdown("**📬 Связь:**")
     st.write("Есть идея или нашли ошибку?")
     st.markdown("[Написать мне (@nazmiika)](https://t.me/nazmiika)")
+
